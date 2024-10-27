@@ -1,0 +1,50 @@
+site_name: "suma"
+certificate_issued_to: "guide.com"
+#ssl_certificate_hash: "FB7538C96144568BBE6E44522D9EC3FE30BE86FD"
+server_ip: "54.163.165.211"
+folders:
+  AuthorizationPortal: 1
+  AuthorizationPortalAPI: 0
+  AutoAuthAPI: 0
+  CloudAPI: 1
+  ConfigAPI: 1
+  FicoAPI: 1
+  InterqualConnect: 0
+  MCG: 0
+  MemberServices: 0
+  MemberServicesAPI: 0
+  Portal: 1
+  ProviderRegistration: 1
+  RealTimeADT: 0
+  RealTimeADTAPI: 0
+  RealTimeAPI: 0
+  ServiceProvider: 0
+  SSISAPI: 1
+  SmartComm: 0
+
+cloudapi_subfolders:
+  - Account
+  - Activity
+  - Alert
+  - AppealGrievance
+  - Appointment
+  - Assessment
+  - Audit
+  - Authorization
+  - CarePlan
+  - CareTeam
+  - ConsentForm
+  - Dashboard
+  - Document
+  - Eligibility
+  - Encounter
+  - Letter
+  - Master
+  - Medication
+  - Member
+  - Payor
+  - Profile
+  - Program
+  - Provider
+  - Risk
+  - ServicePlan

@@ -1,0 +1,117 @@
+---
+- name: Create folder suma and configure IIS site with app pools and CloudAPI subfolders
+  hosts: windows
+  gather_facts: yes  # Enable gathering facts to get the IP address
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Ensure the deployment folder exists
+      ansible.windows.win_file:
+        state: directory
+        path: C:\inetpub\wwwroot\deployment
+
+    - name: Create folder suma
+      ansible.windows.win_file:
+        state: directory
+        path: C:\inetpub\wwwroot\deployment\suma
+
+    - name: Ensure IIS is installed
+      ansible.windows.win_feature:
+        name: Web-Server
+        state: present
+        include_management_tools: yes
+
+    - name: Gather IP address
+      win_shell: |
+        (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -eq "Ethernet" }).IPAddress
+      register: ip_address
+
+    - name: Debug IP address
+      ansible.builtin.debug:
+        var: ip_address.stdout
+
+    - name: Check if IIS site exists
+      community.windows.win_iis_website:
+        name: suma
+        state: started
+        physical_path: C:\inetpub\wwwroot\deployment\suma
+      register: site_info
+      failed_when: false
+      ignore_errors: true
+
+    - name: Create IIS site for suma
+      community.windows.win_iis_website:
+        name: suma
+        state: started
+        physical_path: C:\inetpub\wwwroot\deployment\suma
+        bindings:
+          - protocol: http
+            port: 80
+            ip: "{{ ip_address.stdout }}"
+            hostname: "{{ site_name }}.guide.com"
+          - protocol: https
+            port: 443
+            ip: "{{ ip_address.stdout }}"
+            hostname: "{{ site_name }}.guide.com"
+      when: site_info is failed
+
+    - name: Create specified folders in suma directory
+      ansible.windows.win_file:
+        state: directory
+        path: "C:\\inetpub\\wwwroot\\deployment\\suma\\{{ item.key }}"
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Ensure application pools exist for specified folders
+      community.windows.win_iis_webapppool:
+        name: "AppPool_{{ item.key }}"
+        state: started
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Ensure applications under the site exist
+      community.windows.win_iis_webapplication:
+        name: "/{{ item.key }}"
+        site: suma
+        state: present
+        physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\{{ item.key }}"
+        application_pool: "AppPool_{{ item.key }}"
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Create CloudAPI subfolders
+      ansible.windows.win_file:
+        state: directory
+        path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
+      loop: "{{ cloudapi_subfolders }}"
+
+    - name: Ensure application pools exist for CloudAPI subfolders
+      community.windows.win_iis_webapppool:
+        name: "AppPool_CloudAPI_{{ item }}"
+        state: started
+      loop: "{{ cloudapi_subfolders }}"
+
+    - name: Ensure CloudAPI subfolders are converted to applications
+      community.windows.win_iis_webapplication:
+        name: "/CloudAPI/{{ item }}"
+        site: suma
+        state: present
+        physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
+        application_pool: "AppPool_CloudAPI_{{ item }}"
+      loop: "{{ cloudapi_subfolders }}"
+
+
+    - name: Create bindings for HTTP and HTTPS
+      ansible.windows.win_shell: |
+        Import-Module WebAdministration
+        $siteName = "suma"
+        $ipAddress = "{{ ip_address.stdout }}"
+        $hostname = "{{ site_name }}.guide.com"
+        $certificateHash = "{{ ssl_certificate_hash }}"
+
+        # Add HTTP binding
+        New-WebBinding -Name $siteName -Protocol http -Port 80 -IPAddress $ipAddress -HostHeader $hostname
+
+        # Add HTTPS binding
+        New-WebBinding -Name $siteName -Protocol https -Port 443 -IPAddress $ipAddress -HostHeader $hostname
