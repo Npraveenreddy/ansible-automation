@@ -13,19 +13,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Ansible
-        run: |
-          sudo apt update
-          sudo apt install -y ansible
-      - name: Check Ansible Installation
-        run: ansible --version
-      - name: Test Network Connectivity
-        run: |
-          ping -c 4 54.163.165.211
-          ping -c 4 52.90.239.26
-      - name: Check DNS Resolution
-        run: |
-          nslookup 54.163.165.211
-          nslookup 52.90.239.26
       - name: Run Ansible Playbook
         run: ansible-playbook -i hosts.ini infra.yml -vvv
