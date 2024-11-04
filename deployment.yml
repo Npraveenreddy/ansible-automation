@@ -1,13 +1,15 @@
+---
 - name: Deploy application
   hosts: windows
   gather_facts: yes
   vars:
     git_repo_url: "https://github.com/Npraveenreddy/training.git"
+    site_name: "suma-care"
     folders:
       AuthorizationPortal: 0
       AuthorizationPortalAPI: 0
       AutoAuthAPI: 0
-      CloudAPI: 1
+      CloudAPI: 0
       FicoAPI: 0
       InterqualConnect: 0
       MCG: 0
@@ -20,33 +22,38 @@
       RealTimeAPI: 0
       ServiceProvider: 0
       SSISAPI: 0
-      SmartComm: 1
+      SmartComm: 0
   tasks:
+    - name: Check if any folder is selected
+      set_fact:
+        folders_selected: "{{ folders | dict2items | selectattr('value', 'equalto', 1) | list }}"
+
     - name: Clone the Git repository
       ansible.windows.win_shell: |
-         git clone {{ git_repo_url }} C:\inetpub\wwwroot\deployment\temp_repo
+         git clone {{ git_repo_url }} C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo
       args:
-        creates: C:\inetpub\wwwroot\deployment\temp_repo
-      when: folders.Portal == 1 or folders.SmartComm == 1 or folders.ClouAPI == 1
+        creates: C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo
+      when: folders_selected | length > 0
 
     - name: Ensure destination folders exist
       ansible.windows.win_file:
         state: directory
-        path: "C:\\inetpub\\wwwroot\\deployment\\{{ item.key }}"
+        path: "C:\\inetpub\\wwwroot\\deployment\\{{ site_name }}\\{{ item.key }}"
       loop: "{{ folders | dict2items }}"
       when: item.value == 1
 
     - name: Copy the folders from the cloned repository
       ansible.windows.win_shell: |
-        if (Test-Path -Path C:\inetpub\wwwroot\deployment\temp_repo\{{ item.key }}) {
-          Copy-Item -Path C:\inetpub\wwwroot\deployment\temp_repo\{{ item.key }}\* -Destination C:\inetpub\wwwroot\deployment\{{ item.key }} -Recurse -Force
+        if (Test-Path -Path C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo\{{ item.key }}) {
+          Copy-Item -Path C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo\{{ item.key }}\* -Destination C:\inetpub\wwwroot\deployment\{{ site_name }}\{{ item.key }} -Recurse -Force
         } else {
-          Write-Host "Source path C:\inetpub\wwwroot\deployment\temp_repo\{{ item.key }} does not exist."
+          Write-Host "Source path C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo\{{ item.key }} does not exist."
         }
       loop: "{{ folders | dict2items }}"
       when: item.value == 1
+
     - name: Remove the temporary repository folder
       ansible.windows.win_file:
-        path: C:\inetpub\wwwroot\deployment\temp_repo
+        path: C:\inetpub\wwwroot\deployment\{{ site_name }}\temp_repo
         state: absent
-      when: folders.Portal == 1 or folders.SmartComm == 1 or folders.ClouAPI == 1
+      when: folders_selected | length > 0

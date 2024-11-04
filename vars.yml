@@ -1,7 +1,7 @@
 site_name: "suma"
 certificate_issued_to: "guide.com"
-#ssl_certificate_hash: "FB7538C96144568BBE6E44522D9EC3FE30BE86FD"
-server_ip: "54.163.165.211"
+ssl_certificate_hash: "FB7538C96144568BBE6E44522D9EC3FE30BE86FD" 
+server_ip: "54.163.165.211" 
 folders:
   AuthorizationPortal: 1
   AuthorizationPortalAPI: 0
@@ -48,3 +48,4 @@ cloudapi_subfolders:
   - Provider
   - Risk
   - ServicePlan
+

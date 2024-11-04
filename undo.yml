@@ -1,0 +1,56 @@
+---
+- name: Undo IIS Site Setup
+  hosts: windows
+  vars_files:
+    - vars.yml  # Reuse the same variables file
+
+  tasks:
+    - name: Stop and remove IIS applications under CloudAPI
+      community.windows.win_iis_website:
+        name: "{{ site_name }}/CloudAPI/{{ item }}"
+        state: absent
+      loop: "{{ cloudapi_subfolders }}"
+
+    - name: Remove app pools for CloudAPI subfolders
+      community.windows.win_iis_webapppool:
+        name: "CloudAPI_{{ item }}_AppPool"
+        state: absent
+      loop: "{{ cloudapi_subfolders }}"
+
+    - name: Stop and remove primary IIS applications
+      community.windows.win_iis_website:
+        name: "{{ site_name }}/{{ item.key }}"
+        state: absent
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Remove app pools for primary folders
+      community.windows.win_iis_webapppool:
+        name: "{{ item.key }}_AppPool"
+        state: absent
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Remove the IIS site
+      community.windows.win_iis_website:
+        name: "{{ site_name }}"
+        state: absent
+
+    - name: Remove CloudAPI subfolders
+      ansible.builtin.win_file:
+        path: "C:\\inetpub\\wwwroot\\deployment\\{{ site_name }}\\CloudAPI\\{{ item }}"
+        state: absent
+      loop: "{{ cloudapi_subfolders }}"
+
+    - name: Remove primary folders under site
+      ansible.builtin.win_file:
+        path: "C:\\inetpub\\wwwroot\\deployment\\{{ site_name }}\\{{ item.key }}"
+        state: absent
+      loop: "{{ folders | dict2items }}"
+      when: item.value == 1
+
+    - name: Remove the main site folder
+      ansible.builtin.win_file:
+        path: "C:\\inetpub\\wwwroot\\deployment\\{{ site_name }}"
+        state: absent
+

@@ -22,15 +22,6 @@
         state: present
         include_management_tools: yes
 
-    - name: Gather IP address
-      win_shell: |
-        (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -eq "Ethernet" }).IPAddress
-      register: ip_address
-
-    - name: Debug IP address
-      ansible.builtin.debug:
-        var: ip_address.stdout
-
     - name: Check if IIS site exists
       community.windows.win_iis_website:
         name: suma
@@ -48,12 +39,13 @@
         bindings:
           - protocol: http
             port: 80
-            ip: "{{ ip_address.stdout }}"
-            hostname: "{{ site_name }}.guide.com"
+            ip: "{{ ansible_default_ipv4.address }}"
           - protocol: https
             port: 443
-            ip: "{{ ip_address.stdout }}"
-            hostname: "{{ site_name }}.guide.com"
+            ip: "{{ ansible_default_ipv4.address }}"
+            hostname: "{{ site_name }}.local"
+            certificate_hash: "{{ ssl_certificate_hash }}"
+            certificate_store_name: "MY"
       when: site_info is failed
 
     - name: Create specified folders in suma directory
@@ -101,17 +93,3 @@
         application_pool: "AppPool_CloudAPI_{{ item }}"
       loop: "{{ cloudapi_subfolders }}"
 
-
-    - name: Create bindings for HTTP and HTTPS
-      ansible.windows.win_shell: |
-        Import-Module WebAdministration
-        $siteName = "suma"
-        $ipAddress = "{{ ip_address.stdout }}"
-        $hostname = "{{ site_name }}.guide.com"
-        $certificateHash = "{{ ssl_certificate_hash }}"
-
-        # Add HTTP binding
-        New-WebBinding -Name $siteName -Protocol http -Port 80 -IPAddress $ipAddress -HostHeader $hostname
-
-        # Add HTTPS binding
-        New-WebBinding -Name $siteName -Protocol https -Port 443 -IPAddress $ipAddress -HostHeader $hostname
