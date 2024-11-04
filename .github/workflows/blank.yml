@@ -16,4 +16,4 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           ls
-         # ansible-playbook -i hosts.ini infra.yml -vvv
+          ansible-playbook -i hosts.ini infra.yml -vvv
