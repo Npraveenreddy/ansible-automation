@@ -101,6 +101,16 @@
         application_pool: "AppPool_CloudAPI_{{ item }}"
       loop: "{{ cloudapi_subfolders }}"
 
+    - name: Set application pool identity for SSISAPI and CloudAPI
+      community.windows.win_iis_webapppool:
+        name: "{{ item }}"
+        state: started
+        identity:
+          username: "testing-name"
+          password: "your_password_here"
+      loop:
+        - "AppPool_SSISAPI"
+        - "AppPool_CloudAPI"
 
     - name: Create bindings for HTTP and HTTPS
       ansible.windows.win_shell: |
