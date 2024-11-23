@@ -16,11 +16,11 @@
         state: directory
         path: C:\inetpub\wwwroot\deployment\suma
 
-    - name: Ensure IIS is installed
-      ansible.windows.win_feature:
-        name: Web-Server
-        state: present
-        include_management_tools: yes
+    # - name: Ensure IIS is installed
+    #   ansible.windows.win_feature:
+    #     name: Web-Server
+    #     state: present
+    #     include_management_tools: yes
 
     - name: Gather IP address
       win_shell: |
@@ -92,25 +92,14 @@
         state: started
       loop: "{{ cloudapi_subfolders }}"
 
-    - name: Ensure CloudAPI subfolders are converted to applications
-      community.windows.win_iis_webapplication:
-        name: "/CloudAPI/{{ item }}"
-        site: suma
-        state: present
-        physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
-        application_pool: "AppPool_CloudAPI_{{ item }}"
-      loop: "{{ cloudapi_subfolders }}"
-
-    - name: Set application pool identity for SSISAPI and CloudAPI
-      community.windows.win_iis_webapppool:
-        name: "{{ item }}"
-        state: started
-        identity:
-          username: "testing-name"
-          password: "your_password_here"
-      loop:
-        - "AppPool_SSISAPI"
-        - "AppPool_CloudAPI"
+    # - name: Ensure CloudAPI subfolders are converted to applications
+    #   community.windows.win_iis_webapplication:
+    #     name: "/CloudAPI/{{ item }}"
+    #     site: suma
+    #     state: present
+    #     physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
+    #     application_pool: "AppPool_CloudAPI_{{ item }}"
+    #   loop: "{{ cloudapi_subfolders }}"
 
     - name: Create bindings for HTTP and HTTPS
       ansible.windows.win_shell: |
