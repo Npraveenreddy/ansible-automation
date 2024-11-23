@@ -92,14 +92,14 @@
         state: started
       loop: "{{ cloudapi_subfolders }}"
 
-    # - name: Ensure CloudAPI subfolders are converted to applications
-    #   community.windows.win_iis_webapplication:
-    #     name: "/CloudAPI/{{ item }}"
-    #     site: suma
-    #     state: present
-    #     physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
-    #     application_pool: "AppPool_CloudAPI_{{ item }}"
-    #   loop: "{{ cloudapi_subfolders }}"
+    - name: Ensure CloudAPI subfolders are converted to applications
+      community.windows.win_iis_webapplication:
+        name: "/CloudAPI/{{ item }}"
+        site: suma
+        state: present
+        physical_path: "C:\\inetpub\\wwwroot\\deployment\\suma\\CloudAPI\\{{ item }}"
+        application_pool: "AppPool_CloudAPI_{{ item }}"
+      loop: "{{ cloudapi_subfolders }}"
 
     - name: Create bindings for HTTP and HTTPS
       ansible.windows.win_shell: |
