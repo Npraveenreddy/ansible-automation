@@ -101,16 +101,16 @@
         application_pool: "AppPool_CloudAPI_{{ item }}"
       loop: "{{ cloudapi_subfolders }}"
 
-    - name: Create bindings for HTTP and HTTPS
-      ansible.windows.win_shell: |
-        Import-Module WebAdministration
-        $siteName = "suma"
-        $ipAddress = "{{ ip_address.stdout }}"
-        $hostname = "{{ site_name }}.guide.com"
-        $certificateHash = "{{ ssl_certificate_hash }}"
+    # - name: Create bindings for HTTP and HTTPS
+    #   ansible.windows.win_shell: |
+    #     Import-Module WebAdministration
+    #     $siteName = "suma"
+    #     $ipAddress = "{{ ip_address.stdout }}"
+    #     $hostname = "{{ site_name }}.guide.com"
+    #     $certificateHash = "{{ ssl_certificate_hash }}"
 
-        # Add HTTP binding
-        New-WebBinding -Name $siteName -Protocol http -Port 80 -IPAddress $ipAddress -HostHeader $hostname
+    #     # Add HTTP binding
+    #     New-WebBinding -Name $siteName -Protocol http -Port 80 -IPAddress $ipAddress -HostHeader $hostname
 
-        # Add HTTPS binding
-        New-WebBinding -Name $siteName -Protocol https -Port 443 -IPAddress $ipAddress -HostHeader $hostname
+    #     # Add HTTPS binding
+    #     New-WebBinding -Name $siteName -Protocol https -Port 443 -IPAddress $ipAddress -HostHeader $hostname
